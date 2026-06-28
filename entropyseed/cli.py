@@ -9,7 +9,8 @@ from collections.abc import Sequence
 from . import __version__
 from .bip39 import entropy_to_mnemonic, word_count_for_strength
 from .crypto import EntropySource, mix_sources, sha512_source
-from .entropy import dice_entropy, manual_entropy, os_entropy, timer_jitter
+from .entropy import MIN_DICE_ROLLS_128, MIN_DICE_ROLLS_256, dice_entropy, manual_entropy, os_entropy, timer_jitter
+from .selftest import run_self_tests
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -43,6 +44,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="require re-entry of 4 randomly selected mnemonic word positions",
     )
+    parser.add_argument(
+        "--self-test",
+        action="store_true",
+        help="run internal checks without generating or printing a mnemonic",
+    )
     return parser
 
 
@@ -53,7 +59,8 @@ def collect_sources(args: argparse.Namespace) -> list[EntropySource]:
     if args.manual:
         sources.append(sha512_source("manual-typing", manual_entropy()))
     if args.dice:
-        sources.append(sha512_source("dice-rolls", dice_entropy()))
+        min_rolls = MIN_DICE_ROLLS_128 if args.strength == 128 else MIN_DICE_ROLLS_256
+        sources.append(sha512_source("dice-rolls", dice_entropy(min_rolls)))
     if args.timer_jitter:
         sources.append(sha512_source("timer-jitter", timer_jitter(args.jitter_samples)))
 
@@ -97,9 +104,23 @@ def confirm_mnemonic(mnemonic: str) -> bool:
     return True
 
 
+def print_self_test_summary() -> int:
+    results = run_self_tests()
+    failed = [result for result in results if not result.passed]
+    for result in results:
+        status = "PASS" if result.passed else "FAIL"
+        detail = f" - {result.detail}" if result.detail else ""
+        print(f"{status}: {result.name}{detail}")
+    print(f"Summary: {len(results) - len(failed)}/{len(results)} checks passed.")
+    return 1 if failed else 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+
+    if args.self_test:
+        return print_self_test_summary()
 
     try:
         word_count = word_count_for_strength(args.strength)

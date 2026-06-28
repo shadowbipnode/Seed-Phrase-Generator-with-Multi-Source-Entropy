@@ -9,6 +9,7 @@ from entropyseed.cli import (
     numbered_mnemonic,
 )
 from entropyseed.crypto import sha512_source
+from entropyseed.bip39 import validate_mnemonic_checksum
 
 
 def test_help_command_works():
@@ -20,11 +21,31 @@ def test_help_command_works():
     )
     assert "--strength" in result.stdout
     assert "--confirm" in result.stdout
+    assert "--self-test" in result.stdout
+
+
+def test_self_test_command_works_without_printing_seed():
+    result = subprocess.run(
+        [sys.executable, "seedgen.py", "--self-test"],
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    assert "PASS: wordlist length" in result.stdout
+    assert "PASS: BIP39 vectors" in result.stdout
+    assert "Generated BIP39 mnemonic" not in result.stdout
 
 
 def test_derive_256_bit_mnemonic_has_24_words():
     mnemonic = derive_mnemonic([sha512_source("os-csprng", b"fixed")], 256)
     assert len(mnemonic.split()) == 24
+    assert validate_mnemonic_checksum(mnemonic)
+
+
+def test_derive_128_bit_mnemonic_validates():
+    mnemonic = derive_mnemonic([sha512_source("os-csprng", b"fixed")], 128)
+    assert len(mnemonic.split()) == 12
+    assert validate_mnemonic_checksum(mnemonic)
 
 
 def test_confirmation_positions_are_four_unique_sorted_positions():
@@ -64,7 +85,7 @@ def test_collect_sources_includes_requested_optional_sources(monkeypatch):
 
     monkeypatch.setattr("entropyseed.cli.os_entropy", lambda size: b"o" * size)
     monkeypatch.setattr("entropyseed.cli.manual_entropy", lambda: b"manual")
-    monkeypatch.setattr("entropyseed.cli.dice_entropy", lambda: b"123456")
+    monkeypatch.setattr("entropyseed.cli.dice_entropy", lambda min_rolls: b"123456")
     monkeypatch.setattr("entropyseed.cli.timer_jitter", lambda samples: b"jitter")
 
     sources = collect_sources(Args())
@@ -74,3 +95,24 @@ def test_collect_sources_includes_requested_optional_sources(monkeypatch):
         "dice-rolls",
         "timer-jitter",
     ]
+
+
+def test_collect_sources_uses_256_bit_dice_minimum(monkeypatch):
+    class Args:
+        strength = 256
+        manual = False
+        dice = True
+        timer_jitter = False
+        jitter_samples = 2
+
+    observed = {}
+    monkeypatch.setattr("entropyseed.cli.os_entropy", lambda size: b"o" * size)
+
+    def fake_dice_entropy(min_rolls):
+        observed["min_rolls"] = min_rolls
+        return b"1" * min_rolls
+
+    monkeypatch.setattr("entropyseed.cli.dice_entropy", fake_dice_entropy)
+
+    collect_sources(Args())
+    assert observed["min_rolls"] == 99
