@@ -1,14 +1,40 @@
 # entropyseed
 
+[![Tests](https://github.com/shadowbipnode/Seed-Phrase-Generator-with-Multi-Source-Entropy/actions/workflows/tests.yml/badge.svg)](https://github.com/shadowbipnode/Seed-Phrase-Generator-with-Multi-Source-Entropy/actions/workflows/tests.yml)
+
 Offline BIP39 English mnemonic generation with mandatory operating-system CSPRNG entropy and optional local supplemental entropy.
 
 Run this only on a trusted offline machine. Review the code, install dependencies before going offline, and keep generated mnemonics away from cameras, printers, cloud sync, clipboard tools, and networked services.
 
 The original webcam/audio/mouse implementation is preserved unchanged under `legacy/`. The maintained generator does not use webcam, microphone, mouse tracking, network access, telemetry, clipboard, QR output, audio output, or video output.
 
-## Quick Start
+## Release Status
 
-Python 3.10 or newer is recommended.
+Current project version: 2.2.0.
+
+The maintained CLI is tested on Windows and Linux with Python 3.11, 3.12, and 3.13 through GitHub Actions.
+
+## Installation From Source
+
+Python 3.11 or newer is recommended.
+
+Install the CLI from a local checkout:
+
+```bash
+python -m pip install -r requirements.txt
+python -m pip install .
+entropyseed --self-test
+```
+
+The installed command is:
+
+```bash
+entropyseed
+```
+
+## Running From The Repository
+
+You can also run the repository entry point directly:
 
 ```bash
 python -m pip install -r requirements.txt
@@ -68,6 +94,8 @@ Run internal checks without generating or printing a mnemonic:
 python seedgen.py --self-test
 ```
 
+After installing from source, replace `python seedgen.py` with `entropyseed` in the examples above.
+
 ## Safe Usage
 
 - Disconnect networking before generation.
@@ -87,7 +115,7 @@ Dice input accepts digits `1` through `6`; spaces are ignored. For 12-word gener
 
 Timer jitter displays a short collection message and progress dots. It is collected in memory and should complete quickly.
 
-## Security Behavior
+## Security Notes
 
 By default and by design, this project never saves these to disk:
 
@@ -99,6 +127,10 @@ By default and by design, this project never saves these to disk:
 - mnemonic text
 
 Clipboard support is disabled. Write the mnemonic down using your own offline backup process.
+
+Passing tests and self-tests only check expected software behavior. They do not prove the operating system, terminal, firmware, hardware, or physical environment is safe.
+
+Do not include generated seed material, mnemonics, entropy, QR codes, audio, video, screenshots, or wallet-private details in bug reports or public issues.
 
 ## Tests
 
