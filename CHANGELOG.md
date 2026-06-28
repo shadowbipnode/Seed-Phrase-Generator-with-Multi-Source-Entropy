@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.2.0
+
+- Added GitHub Actions tests for Windows and Ubuntu across Python 3.11, 3.12, and 3.13.
+- Added Python packaging metadata and the `entropyseed` console script.
+- Added release checklist documentation.
+- Updated README installation, usage, self-test, security, and release status sections.
+
 ## 2.1.0
 
 - Added BIP39 English test vectors and mnemonic checksum validation.
