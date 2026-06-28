@@ -11,6 +11,9 @@ import secrets
 import sys
 import time
 
+MIN_DICE_ROLLS_128 = 50
+MIN_DICE_ROLLS_256 = 99
+
 
 def os_entropy(num_bytes: int) -> bytes:
     if num_bytes <= 0:
@@ -27,24 +30,35 @@ def manual_entropy() -> bytes:
     return f"{time.perf_counter_ns()}:{first}:{second}".encode("utf-8")
 
 
-def dice_entropy() -> bytes:
-    print("Enter dice rolls using only digits 1-6. Spaces are allowed.")
+def dice_entropy(min_rolls: int = MIN_DICE_ROLLS_128) -> bytes:
+    if min_rolls <= 0:
+        raise ValueError("minimum dice rolls must be positive")
+
+    print(f"Enter at least {min_rolls} dice rolls using only digits 1-6. Spaces are allowed.")
+    print("Dice rolls supplement the mandatory OS CSPRNG entropy.")
     rolls = input("dice rolls: ").replace(" ", "").strip()
     if not rolls:
         raise ValueError("dice entropy was requested but no rolls were entered")
     invalid = sorted(set(rolls) - set("123456"))
     if invalid:
         raise ValueError(f"dice rolls can only contain digits 1-6, got: {''.join(invalid)}")
+    if len(rolls) < min_rolls:
+        raise ValueError(f"dice entropy needs at least {min_rolls} rolls; got {len(rolls)}")
     return f"{time.perf_counter_ns()}:{rolls}".encode("ascii")
 
 
-def timer_jitter(samples: int = 64) -> bytes:
+def timer_jitter(samples: int = 64, *, show_progress: bool = True) -> bytes:
     if samples <= 0:
         raise ValueError("timer jitter samples must be positive")
 
+    if show_progress:
+        print(f"Collecting {samples} local timer jitter samples in memory.")
+        print("This should take only a moment.")
+
     values: list[int] = []
     previous = time.perf_counter_ns()
-    for _ in range(samples):
+    progress_step = max(1, samples // 4)
+    for sample_index in range(samples):
         marker = secrets.randbits(16) | 1
         acc = 0
         for index in range(marker % 257 + 1):
@@ -52,6 +66,11 @@ def timer_jitter(samples: int = 64) -> bytes:
         now = time.perf_counter_ns()
         values.append((now - previous) ^ acc)
         previous = now
+        if show_progress and ((sample_index + 1) % progress_step == 0 or sample_index + 1 == samples):
+            print(".", end="", flush=True)
+
+    if show_progress:
+        print(" done")
 
     return b"".join(value.to_bytes(16, "big", signed=False) for value in values)
 

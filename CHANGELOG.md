@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.1.0
+
+- Added BIP39 English test vectors and mnemonic checksum validation.
+- Added tests for 128-bit and 256-bit generated mnemonic validation.
+- Tightened HKDF-SHA512 and entropy-source input validation.
+- Added additional HKDF-SHA512 vectors and deterministic-output tests.
+- Required dice input to contain only digits `1` through `6`.
+- Required at least 50 dice rolls for 12-word generation and 99 for 24-word generation.
+- Clarified that dice, manual typing, and timer jitter supplement mandatory OS CSPRNG entropy.
+- Made timer-jitter collection announce itself and show short progress.
+- Added `python seedgen.py --self-test` for internal checks without mnemonic generation.
+- Updated README and SECURITY with quick start, safe usage, examples, self-test usage, and a realistic threat model.
+
 ## 1.0.0
 
 - Preserved the original webcam/audio/mouse implementation under `legacy/`.

@@ -1,32 +1,24 @@
 # entropyseed
 
-Modern, offline BIP39 mnemonic generation with mandatory operating-system CSPRNG entropy and optional human-supplied entropy.
+Offline BIP39 English mnemonic generation with mandatory operating-system CSPRNG entropy and optional local supplemental entropy.
 
-The original webcam/audio/mouse implementation has been preserved unchanged under `legacy/`.
+Run this only on a trusted offline machine. Review the code, install dependencies before going offline, and keep generated mnemonics away from cameras, printers, cloud sync, clipboard tools, and networked services.
 
-## Features
+The original webcam/audio/mouse implementation is preserved unchanged under `legacy/`. The maintained generator does not use webcam, microphone, mouse tracking, network access, telemetry, clipboard, QR output, audio output, or video output.
 
-- Generates valid BIP39 English mnemonics.
-- Supports 128-bit entropy for 12 words and 256-bit entropy for 24 words.
-- Always includes `secrets.token_bytes` OS CSPRNG entropy.
-- Optionally adds manual typing, dice rolls, and timer jitter.
-- Hashes every entropy source independently with SHA-512.
-- Mixes source digests with HKDF-SHA512.
-- Runs offline after dependencies are installed.
-- Compatible with Windows and Linux.
-- Does not use webcam, microphone, mouse tracking, clipboard, QR output, or media files.
-
-## Install
+## Quick Start
 
 Python 3.10 or newer is recommended.
 
 ```bash
 python -m pip install -r requirements.txt
+python seedgen.py --self-test
+python seedgen.py
 ```
 
 The generator itself uses only the Python standard library. `pytest` is listed for the test suite.
 
-## Usage
+## Examples
 
 Show help:
 
@@ -34,16 +26,28 @@ Show help:
 python seedgen.py --help
 ```
 
-Generate a 12-word mnemonic with mandatory OS CSPRNG entropy:
+Generate a 12-word mnemonic:
 
 ```bash
 python seedgen.py
 ```
 
-Generate a 24-word mnemonic with manual typing, dice rolls, and confirmation:
+Generate a 24-word mnemonic:
 
 ```bash
-python seedgen.py --strength 256 --manual --dice --confirm
+python seedgen.py --strength 256
+```
+
+Add hidden manual typing entropy:
+
+```bash
+python seedgen.py --manual
+```
+
+Add dice-roll entropy:
+
+```bash
+python seedgen.py --dice
 ```
 
 Add timer jitter:
@@ -52,7 +56,36 @@ Add timer jitter:
 python seedgen.py --timer-jitter
 ```
 
+Generate 24 words with manual, dice, timer jitter, and confirmation:
+
+```bash
+python seedgen.py --strength 256 --manual --dice --timer-jitter --confirm
+```
+
+Run internal checks without generating or printing a mnemonic:
+
+```bash
+python seedgen.py --self-test
+```
+
+## Safe Usage
+
+- Disconnect networking before generation.
+- Use a trusted, clean operating system and terminal.
+- Run `python seedgen.py --self-test` before generating a mnemonic.
+- Write the mnemonic by hand on durable offline media.
+- Verify the written words before funding any wallet.
+- Store backups according to your own risk model.
+
 When `--confirm` is used, the program selects 4 random word positions and asks you to re-enter those words.
+
+## Entropy Sources
+
+OS CSPRNG entropy from `secrets.token_bytes` is always included and cannot be disabled. Manual typing, dice rolls, and timer jitter are supplemental only.
+
+Dice input accepts digits `1` through `6`; spaces are ignored. For 12-word generation, at least 50 dice rolls are required. For 24-word generation, at least 99 dice rolls are required.
+
+Timer jitter displays a short collection message and progress dots. It is collected in memory and should complete quickly.
 
 ## Security Behavior
 
@@ -71,6 +104,8 @@ Clipboard support is disabled. Write the mnemonic down using your own offline ba
 
 ```bash
 python -m pytest -q
+python seedgen.py --help
+python seedgen.py --self-test
 ```
 
 ## Repository Layout
@@ -79,7 +114,3 @@ python -m pytest -q
 - `entropyseed/` - maintained implementation.
 - `tests/` - unit tests.
 - `legacy/` - preserved original implementation and README.
-
-## Notes
-
-Dice entropy accepts digits `1` through `6`; spaces are ignored. Manual typing input is hidden when the terminal supports it. Optional sources supplement the mandatory OS CSPRNG; they are not required for secure generation on a healthy operating system.
