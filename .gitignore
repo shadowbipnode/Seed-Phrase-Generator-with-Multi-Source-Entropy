@@ -1,0 +1,8 @@
+﻿__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.env
+seed_qr.png
+recorded_entropy.wav
+webcam_mouse_output.avi
