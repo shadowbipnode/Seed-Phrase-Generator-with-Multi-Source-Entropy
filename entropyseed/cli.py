@@ -78,9 +78,15 @@ def confirmation_positions(word_count: int, count: int = 4) -> list[int]:
     return sorted(positions)
 
 
+def numbered_mnemonic(mnemonic: str) -> str:
+    return "\n".join(f"{index}. {word}" for index, word in enumerate(mnemonic.split(), start=1))
+
+
 def confirm_mnemonic(mnemonic: str) -> bool:
     words = mnemonic.split()
     positions = confirmation_positions(len(words))
+    print("\nMnemonic word positions:")
+    print(numbered_mnemonic(mnemonic))
     print("\nConfirm the mnemonic by re-entering these words.")
     for index in positions:
         answer = input(f"word {index + 1}: ").strip()

@@ -1,7 +1,7 @@
 import subprocess
 import sys
 
-from entropyseed.cli import collect_sources, confirmation_positions, derive_mnemonic
+from entropyseed.cli import collect_sources, confirmation_positions, derive_mnemonic, numbered_mnemonic
 from entropyseed.crypto import sha512_source
 
 
@@ -27,6 +27,10 @@ def test_confirmation_positions_are_four_unique_sorted_positions():
     assert positions == sorted(positions)
     assert len(set(positions)) == 4
     assert all(0 <= position < 24 for position in positions)
+
+
+def test_numbered_mnemonic_lists_word_positions():
+    assert numbered_mnemonic("alpha beta gamma") == "1. alpha\n2. beta\n3. gamma"
 
 
 def test_collect_sources_includes_requested_optional_sources(monkeypatch):
